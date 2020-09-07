@@ -35,8 +35,8 @@ def main():
     net = load_model("catnet.h5")
 
 
-    WIN_H = 300
-    WIN_W = 300
+    WIN_H = 100
+    WIN_W = 100
 
     cap = cv2.VideoCapture("catto.mp4")
     end = False
