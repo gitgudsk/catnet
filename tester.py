@@ -35,12 +35,13 @@ def main():
     net = load_model("catnet.h5")
 
 
-    WIN_H = 800
-    WIN_W = 800
+    WIN_H = 300
+    WIN_W = 300
 
     cap = cv2.VideoCapture("catto.mp4")
+    end = False
 
-    while True:
+    while True and not end:
         _, frame = cap.read()
 
         pyramid = create_pyramid(frame)
@@ -71,44 +72,34 @@ def main():
                     if w_end >= w:
                         w_end = w
 
-                    cv2.rectangle(img, (w_start, h_start), (w_end, h_end), (0, 255, 0), 2)
-
                     cv2.imshow("Feed" + str(i), img)
-                    cv2.waitKey(1) & 0xFF
+                    k = cv2.waitKey(10) & 0xFF
+                    # ESC
+                    if k == 27:
+                        end = True
 
                     roi = img[h_start:h_end, w_start:w_end]
 
+                    # transform in to the shape the CNN expects
                     roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                     roi = cv2.resize(roi, (50, 50))
                     cv2.imshow("roi", roi)
+
+
                     roi = np.reshape(roi, (1, 50, 50, 1))
 
                     pred = net.predict(roi)
-                    pred = np.argmax(pred, axis=1)
+                    #print(pred)
 
-                    print(pred)
+                    DETECTION_THRESHOLD = 0.95
+
+                    if pred[0] > DETECTION_THRESHOLD:
+                        cv2.rectangle(img, (h_start, w_start), (h_end, w_end), (0, 255, 0), 2)
 
 
-        """
-        k = cv2.waitKey(1) & 0xFF
-        # ESC
-        if k == 27:
-            break
 
-        """
+
     cv2.destroyAllWindows()
 
 
-def testi():
-    kuva=cv2.imread("testi.jpg")
-    kuva=cv2.cvtColor(kuva, cv2.COLOR_BGR2GRAY)
-    kuva=cv2.resize(kuva, (50,50))
-    kuvammm=np.reshape(kuva, (1,50,50,1))
-    cv2.imwrite("hmmm.jpg", kuva)
-
-    net = load_model("catnet.h5")
-    print(net.predict(kuvammm))
-
-
-testi()
-#main()
+main()
