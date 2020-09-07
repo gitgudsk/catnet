@@ -1,11 +1,9 @@
 import numpy as np
 import cv2
-
-"""
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-net = load_model("catnet.h5")
-"""
+
 
 def create_pyramid(frame):
     """
@@ -14,8 +12,8 @@ def create_pyramid(frame):
     :return pyramid: list of downsampled images after the original image
     """
 
-    MIN_H = 80
-    MIN_W = 80
+    MIN_H = 300
+    MIN_W = 300
 
     pyramid = []
 
@@ -32,6 +30,11 @@ def create_pyramid(frame):
 
 def main():
 
+    physical_devices = tf.config.experimental.list_physical_devices("GPU")
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    net = load_model("catnet.h5")
+
+
     WIN_H = 300
     WIN_W = 300
 
@@ -42,6 +45,7 @@ def main():
 
         pyramid = create_pyramid(frame)
 
+        # search matches in every layer of the pyramid
         for i, img in enumerate(pyramid):
 
             h = img.shape[0]
@@ -50,6 +54,7 @@ def main():
             h_iterations = np.int32(np.ceil(h / WIN_H))
             w_iterations = np.int32(np.ceil(w / WIN_W))
 
+            # sliding window
             for hi in range(0, h_iterations):
                 for wi in range(0, w_iterations):
 
@@ -57,6 +62,8 @@ def main():
                     w_start = wi * WIN_W
 
                     h_end = h_start + WIN_H
+
+                    # pyramid image isn't an integer multiple of the window => the last window will be smaller in each column
                     if h_end >= h:
                         h_end = h
 
@@ -67,7 +74,17 @@ def main():
                     cv2.rectangle(img, (w_start, h_start), (w_end, h_end), (0, 255, 0), 2)
 
                     cv2.imshow("Feed" + str(i), img)
-                    cv2.waitKey(3) & 0xFF
+                    cv2.waitKey(1) & 0xFF
+
+                    roi = img[h_start:h_end, w_start:w_end]
+
+                    roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                    roi = cv2.resize(roi, (50, 50))
+                    roi = np.reshape(roi, (1, 50, 50, 1))
+
+                    pred = net.predict(roi)
+                    pred = np.argmax(pred, axis=1)[:1]
+                    print(pred)
 
 
         """
