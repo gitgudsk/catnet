@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+from math import pow
 
 
 
@@ -35,16 +36,17 @@ def main():
     net = load_model("catnet.h5")
 
 
-    WIN_H = 100
-    WIN_W = 100
+    WIN_H = 500
+    WIN_W = 500
 
     cap = cv2.VideoCapture("catto.mp4")
-    end = False
 
-    while True and not end:
-        _, frame = cap.read()
+    while True:
+        ret, frame = cap.read()
 
         pyramid = create_pyramid(frame)
+
+        detections = []
 
         # search matches in every layer of the pyramid
         for i, img in enumerate(pyramid):
@@ -72,11 +74,7 @@ def main():
                     if w_end >= w:
                         w_end = w
 
-                    cv2.imshow("Feed" + str(i), img)
-                    k = cv2.waitKey(10) & 0xFF
-                    # ESC
-                    if k == 27:
-                        end = True
+                    #cv2.imshow("Feed" + str(i), img)
 
                     roi = img[h_start:h_end, w_start:w_end]
 
@@ -91,13 +89,28 @@ def main():
                     pred = net.predict(roi)
                     #print(pred)
 
-                    DETECTION_THRESHOLD = 0.95
+                    DETECTION_THRESHOLD = 0.85
+
+                    scale = int(pow(2, i))
+                    #print(scale)
 
                     if pred[0] > DETECTION_THRESHOLD:
-                        cv2.rectangle(img, (h_start, w_start), (h_end, w_end), (0, 255, 0), 2)
+                        #cv2.rectangle(frame, (scale * h_start, scale * w_start), (scale * h_end, scale * w_end), (0, 255, 0), 2)
+                        #cv2.waitKey(20)
+                        #print("cat")
+                        detections.append(((scale * h_start, scale * w_start), (scale * h_end, scale * w_end)))
 
 
+        # show detections
+        for d in detections:
+            cv2.rectangle(frame, d[0], d[1], (0, 255, 0), 2)
+            print(d)
 
+        cv2.imshow("Kuva", frame)
+        k = cv2.waitKey(30) & 0xFF
+        # ESC
+        if k == 27:
+            break
 
     cv2.destroyAllWindows()
 
