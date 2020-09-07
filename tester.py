@@ -35,10 +35,10 @@ def main():
     net = load_model("catnet.h5")
 
 
-    WIN_H = 300
-    WIN_W = 300
+    WIN_H = 800
+    WIN_W = 800
 
-    cap = cv2.VideoCapture("VID.mp4")
+    cap = cv2.VideoCapture("catto.mp4")
 
     while True:
         _, frame = cap.read()
@@ -80,10 +80,12 @@ def main():
 
                     roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                     roi = cv2.resize(roi, (50, 50))
+                    cv2.imshow("roi", roi)
                     roi = np.reshape(roi, (1, 50, 50, 1))
 
                     pred = net.predict(roi)
-                    pred = np.argmax(pred, axis=1)[:1]
+                    pred = np.argmax(pred, axis=1)
+
                     print(pred)
 
 
@@ -96,6 +98,17 @@ def main():
         """
     cv2.destroyAllWindows()
 
-        
 
-main()
+def testi():
+    kuva=cv2.imread("testi.jpg")
+    kuva=cv2.cvtColor(kuva, cv2.COLOR_BGR2GRAY)
+    kuva=cv2.resize(kuva, (50,50))
+    kuvammm=np.reshape(kuva, (1,50,50,1))
+    cv2.imwrite("hmmm.jpg", kuva)
+
+    net = load_model("catnet.h5")
+    print(net.predict(kuvammm))
+
+
+testi()
+#main()
