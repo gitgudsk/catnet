@@ -34,7 +34,7 @@ def create_NN():
     w, h = 3, 3
 
 
-    model.add(Conv2D(feat_maps, (h, w), input_shape=(50,50,1), activation="relu"))
+    model.add(Conv2D(feat_maps, (h, w), input_shape=(50,50,3), activation="relu"))
     model.add(MaxPooling2D((2,2)))
 
     model.add(Conv2D(feat_maps, (h, w), activation="relu"))
@@ -50,14 +50,16 @@ def create_NN():
 
     PATH = "./classes"
 
+    # read the images, training/validation split included
     imagegen = ImageDataGenerator(horizontal_flip=True, zoom_range=0.2, validation_split=0.2)
 
-    train_gen = imagegen.flow_from_directory(PATH, class_mode="binary", color_mode="grayscale",
+    train_gen = imagegen.flow_from_directory(PATH, class_mode="binary", color_mode="rgb",
                                           target_size=(50, 50), shuffle=True, subset="training")
 
-    valid_gen = imagegen.flow_from_directory(PATH, class_mode="binary", color_mode="grayscale",
+    valid_gen = imagegen.flow_from_directory(PATH, class_mode="binary", color_mode="rgb",
                                           target_size=(50, 50), shuffle=True, subset="validation")
 
+    # train the model until it doesn't improve, save the net for later use
     es = EarlyStopping(monitor="val_accuracy", verbose=1, patience=15)
     mc = ModelCheckpoint("catnet.h5", monitor="val_accuracy", save_weights_only=False, save_best_only=True, verbose=1)
 

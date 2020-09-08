@@ -6,6 +6,9 @@ from math import pow
 
 
 
+VIDEO_FILE = "catto.mp4"
+
+
 def create_pyramid(frame):
     """
     Create an image pyramid out of a frame
@@ -13,8 +16,8 @@ def create_pyramid(frame):
     :return pyramid: list of downsampled images after the original image
     """
 
-    MIN_H = 300
-    MIN_W = 300
+    MIN_H = 600
+    MIN_W = 600
 
     pyramid = []
 
@@ -36,10 +39,11 @@ def main():
     net = load_model("catnet.h5")
 
 
-    WIN_H = 500
-    WIN_W = 500
+    WIN_H = 600
+    WIN_W = 600
 
-    cap = cv2.VideoCapture("catto.mp4")
+    cap = cv2.VideoCapture(VIDEO_FILE)
+    #frame = cv2.imread("cat1.jpg")
 
     while True:
         ret, frame = cap.read()
@@ -79,12 +83,12 @@ def main():
                     roi = img[h_start:h_end, w_start:w_end]
 
                     # transform in to the shape the CNN expects
-                    roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                    #roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                     roi = cv2.resize(roi, (50, 50))
                     cv2.imshow("roi", roi)
 
 
-                    roi = np.reshape(roi, (1, 50, 50, 1))
+                    roi = np.reshape(roi, (1, 50, 50, 3))
 
                     pred = net.predict(roi)
                     #print(pred)
@@ -94,10 +98,8 @@ def main():
                     scale = int(pow(2, i))
                     #print(scale)
 
+                    # add detections to drawing queue
                     if pred[0] > DETECTION_THRESHOLD:
-                        #cv2.rectangle(frame, (scale * h_start, scale * w_start), (scale * h_end, scale * w_end), (0, 255, 0), 2)
-                        #cv2.waitKey(20)
-                        #print("cat")
                         detections.append(((scale * h_start, scale * w_start), (scale * h_end, scale * w_end)))
 
 
